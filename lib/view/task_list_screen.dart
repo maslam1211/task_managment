@@ -86,8 +86,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               elevation: 6,
                               margin: const EdgeInsets.symmetric(vertical: 10),
                               child: ListTile(
-                                title: Text(task.title),
-                                subtitle: Text('Due: ${task.dueDate.toLocal()}'),
+                                title: Text(task.title,style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),),
+                                subtitle: Text('Due: ${task.dueDate.toLocal()}',style: const TextStyle(
+                                        color: Colors.grey, fontSize: 14),
+                                  ),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.delete,color: Colors.red,),
                                   onPressed: task.id != null
