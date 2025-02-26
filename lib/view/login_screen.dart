@@ -1,13 +1,15 @@
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_managment/provider/auth_provider.dart';
+import 'package:task_managment/utilities/app_color_padding.dart';
 import 'package:task_managment/view/task_list_screen.dart';
 import 'register_screen.dart';
+import 'package:task_managment/widgets/reusable_button.dart'; 
+
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,6 +18,16 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0), 
             child: Card(
               elevation: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: AppPadding.kDefaultPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(AppPadding.kDefaultPadding),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -57,8 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 30),
-                    TextField(
+                    TextFormField(
                       controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.email_outlined),
                         labelText: 'Email',
@@ -66,16 +80,30 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      onFieldSubmitted: (_) {
+                        _passwordFocusNode.requestFocus();
+                      },
                     ),
                     const SizedBox(height: 20),
-                    TextField(
+                    TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
+                      focusNode: _passwordFocusNode,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.lock_outline),
                         labelText: 'Password',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
                         ),
                       ),
                     ),
@@ -84,14 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const CircularProgressIndicator()
                         : SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF56ab2f),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                            child:  ReusableButton(
+                              text: 'Login',
                               onPressed: () async {
                                 final success = await authProvider.login(
                                   _emailController.text.trim(),
@@ -110,12 +132,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                       content: Text(authProvider.errorMessage!),
                                     ),
                                   );
+                                } else {
+                                
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Login failed. Please check your credentials.'),
+                                    ),
+                                  );
                                 }
                               },
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16, color: Colors.white),
-                              ),
+                              backgroundColor: AppColorPallet.kDefaultColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                     const SizedBox(height: 16),
@@ -133,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             'Register',
                             style: TextStyle(
-                              color: Color(0xFF56ab2f),
+                              color: AppColorPallet.kDefaultColor,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

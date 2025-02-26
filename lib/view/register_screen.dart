@@ -1,10 +1,15 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_managment/provider/auth_provider.dart';
+import 'package:task_managment/utilities/app_color_padding.dart';
 import 'package:task_managment/view/task_list_screen.dart';
+import 'package:task_managment/widgets/reusable_button.dart';
+import 'package:task_managment/widgets/reusable_form_field.dart';
+
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -13,6 +18,21 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController(); // Added
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +51,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
             child: Card(
               elevation: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: AppPadding.kDefaultPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(AppPadding.kDefaultPadding),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -54,42 +75,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 30),
-                    TextField(
+                    ReusableTextFormField(
                       controller: _emailController,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      labelText: 'Email',
+                      prefixIcon: Icons.email_outlined,
+                      onFieldSubmitted: (_) {
+                        _passwordFocusNode.requestFocus();
+                      },
                     ),
                     const SizedBox(height: 20),
-                    TextField(
+                    ReusableTextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                      focusNode: _passwordFocusNode,
+                      obscureText: _obscurePassword,
+                      labelText: 'Password',
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      onFieldSubmitted: (_) {
+                        _confirmPasswordFocusNode.requestFocus();
+                      },
+                      suffixIconOnTap: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    ReusableTextFormField(
+                      controller: _confirmPasswordController,
+                      focusNode: _confirmPasswordFocusNode,
+                      obscureText: _obscureConfirmPassword,
+                      labelText: 'Confirm Password',
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      suffixIconOnTap: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 30),
                     authProvider.isLoading
                         ? const CircularProgressIndicator()
                         : SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const  Color(0xFF56ab2f),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                            child: ReusableButton(
+                              text: 'Register',
                               onPressed: () async {
+                              
+                                if (_emailController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Please enter email.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                if (_passwordController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Please enter password.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (_confirmPasswordController.text.trim().isEmpty){
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Please confirm password.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                if (_passwordController.text.trim() != _confirmPasswordController.text.trim()){
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Password and confirm password are not same.'),
+                                    ),
+                                  );
+                                  return;
+                                }
                                 final success = await authProvider.register(
                                   _emailController.text.trim(),
                                   _passwordController.text.trim(),
@@ -107,12 +184,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       content: Text(authProvider.errorMessage!),
                                     ),
                                   );
+                                } else {
+                                
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Registration failed. Please try again.'),
+                                    ),
+                                  );
                                 }
                               },
-                              child: const Text(
-                                'Register',
-                                style: TextStyle(fontSize: 16, color: Colors.white),
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                     const SizedBox(height: 16),
@@ -125,7 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: const Text(
                             'Login',
                             style: TextStyle(
-                              color: Color(0xFF56ab2f),
+                              color: AppColorPallet.kDefaultColor,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

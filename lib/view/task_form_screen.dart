@@ -1,11 +1,16 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:task_managment/utilities/app_color_padding.dart';
+import 'package:task_managment/widgets/reusable_drop_down.dart';
+import 'package:task_managment/widgets/reusable_form_field.dart';
 import '../models/task_model.dart';
 import '../provider/task_provider.dart';
+import 'package:task_managment/widgets/reusable_button.dart';
+const double kDefaultPadding = 24.0;
+const Color kDefaultColor = Color(0xFF56ab2f);
 
 class TaskFormScreen extends StatefulWidget {
-  const TaskFormScreen({super.key});
+  const TaskFormScreen({Key? key}) : super(key: key);
 
   @override
   State<TaskFormScreen> createState() => _TaskFormScreenState();
@@ -61,7 +66,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+            .showSnackBar(SnackBar(content: Text('Failed to save task: ${e.toString()}')));
       }
     }
   }
@@ -82,12 +87,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
             child: Card(
               elevation: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: kDefaultPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(kDefaultPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -102,37 +108,25 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      TextFormField(
+                      ReusableTextFormField(
                         controller: _titleController,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.title),
-                          labelText: 'Title',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        labelText: 'Title',
+                        prefixIcon: Icons.title,
                         validator: (value) =>
-                            value!.isEmpty ? 'Please enter a title' : null,
+                            value == null || value.isEmpty ? 'Please enter a title' : null,
                       ),
                       const SizedBox(height: 20),
-                      TextFormField(
+                      ReusableTextFormField(
                         controller: _descriptionController,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.description),
-                          labelText: 'Description',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) => value!.isEmpty
-                            ? 'Please enter a description'
-                            : null,
+                        labelText: 'Description',
+                        prefixIcon: Icons.description,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Please enter a description' : null,
                       ),
                       const SizedBox(height: 20),
                       ListTile(
                         title: const Text('Due Date'),
-                        subtitle:
-                            Text('${_dueDate.toLocal()}'.split(' ')[0]),
+                        subtitle: Text('${_dueDate.toLocal()}'.split(' ')[0]),
                         trailing: IconButton(
                           icon: const Icon(Icons.calendar_today),
                           onPressed: () async {
@@ -147,10 +141,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
+                      ReusableDropdown<String>(
+                        labelText: 'Priority',
                         value: _priority,
-                        decoration:
-                            const InputDecoration(labelText: 'Priority'),
                         items: ['High', 'Medium', 'Low']
                             .map((priority) => DropdownMenuItem(
                                   value: priority,
@@ -160,9 +153,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         onChanged: (value) => setState(() => _priority = value!),
                       ),
                       const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
+                      ReusableDropdown<String>(
+                        labelText: 'Status',
                         value: _status,
-                        decoration: const InputDecoration(labelText: 'Status'),
                         items: ['To-Do', 'In Progress', 'Done']
                             .map((status) => DropdownMenuItem(
                                   value: status,
@@ -174,21 +167,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       const SizedBox(height: 30),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const   Color(0xFF56ab2f),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                        child: ReusableButton(
+                          text: _task == null ? 'Create Task' : 'Update Task',
                           onPressed: () => _submitTask(taskProvider),
-                          child: Text(
-                            _task == null ? 'Create Task' : 'Update Task',
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.white),
-                          ),
+                         backgroundColor: AppColorPallet.kDefaultColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ],
