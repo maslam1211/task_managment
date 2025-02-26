@@ -26,6 +26,7 @@ class TaskManagementApp extends StatelessWidget {
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: 'Task Management App',
             theme: ThemeData(
               primarySwatch: Colors.green,
